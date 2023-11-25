@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -104,12 +106,20 @@ func getIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
 	}
 
-	_, err = os.Stat(fmt.Sprintf("../img/user-%d.jpg", user.ID))
+	files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", user.ID))
 	if err != nil {
-		// ないね
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
+	}
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove file: "+err.Error())
+		}
+	}
+
+	if len(files) == 0 {
 		return c.File(fallbackImage)
 	}
-	image, err := os.ReadFile(fmt.Sprintf("../img/user-%d.jpg", user.ID))
+	image, err := os.ReadFile(files[0])
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
 	}
@@ -143,7 +153,19 @@ func postIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to decode the request body as json")
 	}
 
-	os.WriteFile(fmt.Sprintf("../img/user-%d.jpg", userID), req.Image, 0644)
+	iconHash := sha256.Sum256(req.Image)
+
+	files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userID))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
+	}
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove file: "+err.Error())
+		}
+	}
+
+	os.WriteFile(fmt.Sprintf("../img/user-%d-%x.jpg", userID, iconHash), req.Image, 0644)
 
 	// tx, err := dbConn.BeginTxx(ctx, nil)
 	// if err != nil {
@@ -415,7 +437,6 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 		return User{}, err
 	}
 
-	var image []byte
 	// if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
 	// 	if !errors.Is(err, sql.ErrNoRows) {
 	// 		return User{}, err
@@ -425,20 +446,19 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 	// 		return User{}, err
 	// 	}
 	// }
-	_, err := os.Stat(fmt.Sprintf("../img/user-%d.jpg", userModel.ID))
+	iconHashStr := ""
+	files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userModel.ID))
 	if err != nil {
-		// ないね
-		image, err = os.ReadFile(fallbackImage)
-		if err != nil {
-			return User{}, err
-		}
-	} else {
-		image, err = os.ReadFile(fmt.Sprintf("../img/user-%d.jpg", userModel.ID))
-		if err != nil {
-			return User{}, err
-		}
+		return User{}, err
 	}
-	iconHash := sha256.Sum256(image)
+	if len(files) == 0 {
+		iconHashStr = "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0"
+	}
+	for _, f := range files {
+		ss := strings.Split(f, "-")
+		iconHashStr = ss[1]
+		break
+	}
 
 	user := User{
 		ID:          userModel.ID,
@@ -449,7 +469,7 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 			ID:       themeModel.ID,
 			DarkMode: themeModel.DarkMode,
 		},
-		IconHash: fmt.Sprintf("%x", iconHash),
+		IconHash: iconHashStr,
 	}
 
 	return user, nil
