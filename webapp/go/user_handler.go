@@ -117,6 +117,12 @@ func getIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
 	}
 	if len(files) == 0 {
+		if ifNoneMatchValue == "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0" {
+			return c.NoContent(http.StatusNotModified)
+		}
+		// c.Response().Header().Set("x-accel-redirect", fmt.Sprintf("/img/%s", filepath.Base(fallbackImage)))
+		// return c.NoContent(http.StatusOK)
+
 		return c.File(fallbackImage)
 	}
 
@@ -139,6 +145,9 @@ func getIconHandler(c echo.Context) error {
 	// }
 
 	return c.Blob(http.StatusOK, "image/jpeg", image)
+
+	// c.Response().Header().Set("x-accel-redirect", fmt.Sprintf("/img/%s", filepath.Base(files[0])))
+	// return c.NoContent(http.StatusOK)
 }
 
 func postIconHandler(c echo.Context) error {
