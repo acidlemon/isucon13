@@ -96,7 +96,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 	for _, user := range users {
 		var reactions int64
 		query := `
-		SELECT COUNT(*) FROM livestreams
+		SELECT COUNT(*) FROM livestreams l
 		INNER JOIN reactions r ON r.livestream_id = l.id
 		WHERE l.user_id = ?`
 		if err := tx.GetContext(ctx, &reactions, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -105,7 +105,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 
 		var tips int64
 		query = `
-		SELECT IFNULL(SUM(l2.tip), 0) FROM livestreams
+		SELECT IFNULL(SUM(l2.tip), 0) FROM livestreams l
 		INNER JOIN livecomments l2 ON l2.livestream_id = l.id
 		WHERE l.user_id = ?`
 		if err := tx.GetContext(ctx, &tips, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
