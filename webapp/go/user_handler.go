@@ -416,11 +416,24 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 	}
 
 	var image []byte
-	if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
+	// if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
+	// 	if !errors.Is(err, sql.ErrNoRows) {
+	// 		return User{}, err
+	// 	}
+	// 	image, err = os.ReadFile(fallbackImage)
+	// 	if err != nil {
+	// 		return User{}, err
+	// 	}
+	// }
+	_, err := os.Stat(fmt.Sprintf("../img/user-%d.jpg", userModel.ID))
+	if err != nil {
+		// ないね
+		image, err = os.ReadFile(fallbackImage)
+		if err != nil {
 			return User{}, err
 		}
-		image, err = os.ReadFile(fallbackImage)
+	} else {
+		image, err = os.ReadFile(fmt.Sprintf("../img/user-%d.jpg", userModel.ID))
 		if err != nil {
 			return User{}, err
 		}
