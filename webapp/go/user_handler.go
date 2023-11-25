@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -295,19 +296,30 @@ func registerHandler(c echo.Context) error {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert user theme: "+err.Error())
 	// }
 
-	if out, err := exec.Command("pdnsutil", "add-record", "u.isucon.dev", req.Name, "A", "10", powerDNSSubdomainAddress).CombinedOutput(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, string(out)+": "+err.Error())
+	// if out, err := exec.Command("pdnsutil", "add-record", "u.isucon.dev", req.Name, "A", "10", powerDNSSubdomainAddress).CombinedOutput(); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, string(out)+": "+err.Error())
+	// }
+
+	url, err := url.Parse("http://" + powerDNSSubdomainAddress + ":8081/api/v1/servers/localhost/zones/u.isucon.dev.")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse url: "+err.Error())
 	}
 
-	// url, err := url.Parse("http://" + powerDNSSubdomainAddress + "/api/v1/servers/localhost/zones/u.isucon.dev.")
-	// client := &http.Client{}
-	// client.Do(&http.Request{
-	// 	Method: "PATCH",
-	// 	URL:    url,
-	// 	Header: http.Header{
-	// 		"X-API-Key": []string{"secret"},
-	// 	},
-	// })
+	payload := `{"rrsets": [{"name": "` + req.Name + `", "type": "A", "ttl": 10, "changetype": "REPLACE", "records": [{"content": "` + powerDNSSubdomainAddress + `", "disabled": false}]}]}`
+
+	client := &http.Client{}
+	_, err = client.Do(&http.Request{
+		Method: "PATCH",
+		URL:    url,
+		Header: http.Header{
+			"X-API-Key": []string{"isudns"},
+		},
+		Body: io.NopCloser(strings.NewReader(payload)),
+	})
+	if err != nil {
+		log.Println("failed to request to powerdns: ", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to request to powerdns: "+err.Error())
+	}
 
 	user, err := fillUserResponse(ctx, tx, userModel)
 	if err != nil {
