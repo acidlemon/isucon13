@@ -11,6 +11,6 @@ sudo kill -USR1 `cat /var/run/nginx.pid`
 # mysql slow log rotate
 
 echo isu03 Disk Summary
-ssh ubuntu@isu03 df -h | grep /dev/[xv]
+ssh isucon@isu03 df -h | grep /dev/
 
-ssh ubuntu@isu03 sudo "mv /var/log/mysql/mysql-slow.log /var/log/mysql/mysql-slow-$TAG.log && mysqladmin -u isucon -pisucon flush-logs"
+ssh isucon@isu03 sudo "mv /var/log/mysql/mysql-slow.log /var/log/mysql/mysql-slow-$TAG.log && mysqladmin -u isucon -pisucon flush-logs"
