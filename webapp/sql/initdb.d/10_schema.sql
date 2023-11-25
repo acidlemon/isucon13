@@ -1,17 +1,17 @@
 USE `isupipe`;
 
-DROP TABLE themes;
-DROP TABLE icons;
-DROP TABLE reservation_slots;
-DROP TABLE livestream_viewers_history;
-DROP TABLE livecomment_reports;
-DROP TABLE ng_words;
-DROP TABLE reactions;
-DROP TABLE tags;
-DROP TABLE livestream_tags;
-DROP TABLE livecomments;
-DROP TABLE livestreams;
-DROP TABLE users;
+DROP TABLE themes IF EXISTS;
+DROP TABLE icons IF EXISTS;
+DROP TABLE reservation_slots IF EXISTS;
+DROP TABLE livestream_viewers_history IF EXISTS;
+DROP TABLE livecomment_reports IF EXISTS;
+DROP TABLE ng_words IF EXISTS;
+DROP TABLE reactions IF EXISTS;
+DROP TABLE tags IF EXISTS;
+DROP TABLE livestream_tags IF EXISTS;
+DROP TABLE livecomments IF EXISTS;
+DROP TABLE livestreams IF EXISTS;
+DROP TABLE users IF EXISTS;
 
 -- ユーザ (配信者、視聴者)
 CREATE TABLE `users` (
