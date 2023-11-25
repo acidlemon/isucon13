@@ -305,7 +305,7 @@ func registerHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse url: "+err.Error())
 	}
 
-	payload := `{"rrsets": [{"name": "` + req.Name + `", "type": "A", "ttl": 10, "changetype": "REPLACE", "records": [{"content": "` + powerDNSSubdomainAddress + `", "disabled": false}]}]}`
+	payload := `{"rrsets": [{"name": "` + req.Name + `.u.isucon.dev.", "type": "A", "ttl": 10, "changetype": "REPLACE", "records": [{"content": "` + powerDNSSubdomainAddress + `", "disabled": false}]}]}`
 
 	client := &http.Client{}
 	_, err = client.Do(&http.Request{
