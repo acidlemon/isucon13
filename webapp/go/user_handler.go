@@ -93,6 +93,8 @@ func getIconHandler(c echo.Context) error {
 
 	username := c.Param("username")
 
+	ifNoneMatchValue := c.Request().Header.Get("If-None-Match")
+
 	tx, err := dbConn.BeginTxx(ctx, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
@@ -114,6 +116,12 @@ func getIconHandler(c echo.Context) error {
 	if len(files) == 0 {
 		return c.File(fallbackImage)
 	}
+
+	iconHashStr := strings.Split(files[0], "-")[2]
+	if iconHashStr == ifNoneMatchValue {
+		return c.NoContent(http.StatusNotModified)
+	}
+
 	image, err := os.ReadFile(files[0])
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
