@@ -97,7 +97,6 @@ func getIconHandler(c echo.Context) error {
 
 	ifNoneMatchValue := c.Request().Header.Get("If-None-Match")
 	ifNoneMatchValue = strings.Trim(ifNoneMatchValue, "\"")
-	log.Println("If-None-Match: ", ifNoneMatchValue)
 
 	tx, err := dbConn.BeginTxx(ctx, nil)
 	if err != nil {
