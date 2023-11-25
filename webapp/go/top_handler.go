@@ -31,20 +31,20 @@ func getTagHandler(c echo.Context) error {
 	}
 	defer tx.Rollback()
 
-	var tagModels []*TagModel
-	if err := tx.SelectContext(ctx, &tagModels, "SELECT * FROM tags"); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
-	}
+	// var tagModels []*TagModel
+	// if err := tx.SelectContext(ctx, &tagModels, "SELECT * FROM tags"); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+	// }
 
 	if err := tx.Commit(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
 	}
 
-	tags := make([]*Tag, len(tagModels))
-	for i := range tagModels {
+	tags := make([]*Tag, len(globalTagModels))
+	for i := range globalTagModels {
 		tags[i] = &Tag{
-			ID:   tagModels[i].ID,
-			Name: tagModels[i].Name,
+			ID:   globalTagModels[i].ID,
+			Name: globalTagModels[i].Name,
 		}
 	}
 	return c.JSON(http.StatusOK, &TagsResponse{

@@ -107,10 +107,17 @@ func connectDB(logger echo.Logger) (*sqlx.DB, error) {
 	return db, nil
 }
 
+var globalTagModels []*TagModel
+
 func initializeHandler(c echo.Context) error {
 	if out, err := exec.Command("../sql/init.sh").CombinedOutput(); err != nil {
 		c.Logger().Warnf("init.sh failed with err=%s", string(out))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
+	}
+
+	ctx := c.Request().Context()
+	if err := dbConn.SelectContext(ctx, &globalTagModels, "SELECT * FROM tags ORDER BY id"); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
 	}
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
