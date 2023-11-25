@@ -110,12 +110,6 @@ func getIconHandler(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
 	}
-	for _, f := range files {
-		if err := os.Remove(f); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove file: "+err.Error())
-		}
-	}
-
 	if len(files) == 0 {
 		return c.File(fallbackImage)
 	}
