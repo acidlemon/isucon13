@@ -166,7 +166,7 @@ func postIconHandler(c echo.Context) error {
 		}
 	}
 
-	os.WriteFile(fmt.Sprintf("../img/user-%d-%x.jpg", userID, iconHash), req.Image, 0644)
+	os.WriteFile(fmt.Sprintf("../img/user-%d-%x-.jpg", userID, iconHash), req.Image, 0644)
 
 	// tx, err := dbConn.BeginTxx(ctx, nil)
 	// if err != nil {
