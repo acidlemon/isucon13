@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -139,7 +138,7 @@ func getIconHandler(c echo.Context) error {
 	if user.IconHash == "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0" {
 		return c.File(fallbackImage)
 	}
-	image, err := os.ReadFile(fmt.Sprintf("../img/user-%d-%s-p.jpg", user.ID, user.IconHash))
+	image, err := os.ReadFile(fmt.Sprintf("../img/user-%d.jpg", user.ID))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
 	}
@@ -178,17 +177,17 @@ func postIconHandler(c echo.Context) error {
 
 	iconHash := sha256.Sum256(req.Image)
 
-	files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userID))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
-	}
-	for _, f := range files {
-		if err := os.Remove(f); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove file: "+err.Error())
-		}
-	}
+	// files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userID))
+	// if err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
+	// }
+	// for _, f := range files {
+	// 	if err := os.Remove(f); err != nil {
+	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove file: "+err.Error())
+	// 	}
+	// }
 
-	os.WriteFile(fmt.Sprintf("../img/user-%d-%x-p.jpg", userID, iconHash), req.Image, 0644)
+	os.WriteFile(fmt.Sprintf("../img/user-%d.jpg", userID), req.Image, 0644)
 
 	tx, err := dbConn.BeginTxx(ctx, nil)
 	if err != nil {
