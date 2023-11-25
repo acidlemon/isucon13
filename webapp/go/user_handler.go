@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -94,6 +95,7 @@ func getIconHandler(c echo.Context) error {
 	username := c.Param("username")
 
 	ifNoneMatchValue := c.Request().Header.Get("If-None-Match")
+	log.Println("If-None-Match: ", ifNoneMatchValue)
 
 	tx, err := dbConn.BeginTxx(ctx, nil)
 	if err != nil {
@@ -293,9 +295,19 @@ func registerHandler(c echo.Context) error {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert user theme: "+err.Error())
 	// }
 
-	if out, err := exec.Command("pdnsutil", "add-record", "u.isucon.dev", req.Name, "A", "0", powerDNSSubdomainAddress).CombinedOutput(); err != nil {
+	if out, err := exec.Command("pdnsutil", "add-record", "u.isucon.dev", req.Name, "A", "10", powerDNSSubdomainAddress).CombinedOutput(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, string(out)+": "+err.Error())
 	}
+
+	// url, err := url.Parse("http://" + powerDNSSubdomainAddress + "/api/v1/servers/localhost/zones/u.isucon.dev.")
+	// client := &http.Client{}
+	// client.Do(&http.Request{
+	// 	Method: "PATCH",
+	// 	URL:    url,
+	// 	Header: http.Header{
+	// 		"X-API-Key": []string{"secret"},
+	// 	},
+	// })
 
 	user, err := fillUserResponse(ctx, tx, userModel)
 	if err != nil {
