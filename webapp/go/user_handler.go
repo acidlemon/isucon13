@@ -41,6 +41,7 @@ type UserModel struct {
 	Description    string `db:"description"`
 	HashedPassword string `db:"password"`
 	DarkMode       bool   `db:"dark_mode"`
+	IconHash       string `db:"icon_hash"`
 }
 
 type User struct {
@@ -112,26 +113,33 @@ func getIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
 	}
 
-	files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", user.ID))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
-	}
-	if len(files) == 0 {
-		if ifNoneMatchValue == "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0" {
-			return c.NoContent(http.StatusNotModified)
-		}
-		// c.Response().Header().Set("x-accel-redirect", fmt.Sprintf("/img/%s", filepath.Base(fallbackImage)))
-		// return c.NoContent(http.StatusOK)
-
-		return c.File(fallbackImage)
-	}
-
-	iconHashStr := strings.Split(files[0], "-")[2]
-	if iconHashStr == ifNoneMatchValue {
+	if ifNoneMatchValue != "" && ifNoneMatchValue == user.IconHash {
 		return c.NoContent(http.StatusNotModified)
 	}
 
-	image, err := os.ReadFile(files[0])
+	// files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", user.ID))
+	// if err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
+	// }
+	// if len(files) == 0 {
+	// 	if ifNoneMatchValue == "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0" {
+	// 		return c.NoContent(http.StatusNotModified)
+	// 	}
+	// 	// c.Response().Header().Set("x-accel-redirect", fmt.Sprintf("/img/%s", filepath.Base(fallbackImage)))
+	// 	// return c.NoContent(http.StatusOK)
+
+	// 	return c.File(fallbackImage)
+	// }
+
+	// iconHashStr := strings.Split(files[0], "-")[2]
+	// if iconHashStr == ifNoneMatchValue {
+	// 	return c.NoContent(http.StatusNotModified)
+	// }
+
+	if user.IconHash == "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0" {
+		return c.File(fallbackImage)
+	}
+	image, err := os.ReadFile(fmt.Sprintf("../img/user-%d-%s-p.jpg", user.ID, user.IconHash))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
 	}
@@ -151,7 +159,7 @@ func getIconHandler(c echo.Context) error {
 }
 
 func postIconHandler(c echo.Context) error {
-	//_ := c.Request().Context()
+	ctx := c.Request().Context()
 
 	if err := verifyUserSession(c); err != nil {
 		// echo.NewHTTPErrorが返っているのでそのまま出力
@@ -182,11 +190,11 @@ func postIconHandler(c echo.Context) error {
 
 	os.WriteFile(fmt.Sprintf("../img/user-%d-%x-p.jpg", userID, iconHash), req.Image, 0644)
 
-	// tx, err := dbConn.BeginTxx(ctx, nil)
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
-	// }
-	// defer tx.Rollback()
+	tx, err := dbConn.BeginTxx(ctx, nil)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
+	}
+	defer tx.Rollback()
 
 	// if _, err := tx.ExecContext(ctx, "DELETE FROM icons WHERE user_id = ?", userID); err != nil {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old user icon: "+err.Error())
@@ -197,14 +205,19 @@ func postIconHandler(c echo.Context) error {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
 	// }
 
+	_, err = tx.ExecContext(ctx, "UPDATE users SET icon_hash = ? WHERE id = ?", iconHash, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
+	}
+
 	// // iconID, err := rs.LastInsertId()
 	// // if err != nil {
 	// // 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to get last inserted icon id: "+err.Error())
 	// // }
 
-	// if err := tx.Commit(); err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
-	// }
+	if err := tx.Commit(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
+	}
 
 	return c.JSON(http.StatusCreated, &PostIconResponse{
 		ID: 32,
@@ -484,20 +497,20 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 	// 		return User{}, err
 	// 	}
 	// }
-	iconHashStr := ""
-	files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userModel.ID))
-	if err != nil {
-		return User{}, err
-	}
-	if len(files) == 0 {
-		iconHashStr = "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0"
-	}
-	for _, f := range files {
-		ss := strings.Split(f, "-")
-		iconHashStr = ss[2]
+	// iconHashStr := ""
+	// files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userModel.ID))
+	// if err != nil {
+	// 	return User{}, err
+	// }
+	// if len(files) == 0 {
+	// 	iconHashStr = "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0"
+	// }
+	// for _, f := range files {
+	// 	ss := strings.Split(f, "-")
+	// 	iconHashStr = ss[2]
 
-		break
-	}
+	// 	break
+	// }
 
 	user := User{
 		ID:          userModel.ID,
@@ -508,7 +521,7 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 			ID:       userModel.ID,
 			DarkMode: userModel.DarkMode,
 		},
-		IconHash: iconHashStr,
+		IconHash: userModel.IconHash,
 	}
 
 	return user, nil
