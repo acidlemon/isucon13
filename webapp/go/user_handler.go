@@ -456,7 +456,7 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 	}
 	for _, f := range files {
 		ss := strings.Split(f, "-")
-		iconHashStr = ss[1]
+		iconHashStr = ss[2]
 		break
 	}
 
