@@ -300,7 +300,7 @@ func registerHandler(c echo.Context) error {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, string(out)+": "+err.Error())
 	// }
 
-	url, err := url.Parse("http://" + powerDNSSubdomainAddress + ":8081/api/v1/servers/localhost/zones/u.isucon.dev.")
+	url, err := url.Parse("http://127.0.0.1:8081/api/v1/servers/localhost/zones/u.isucon.dev.")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse url: "+err.Error())
 	}
