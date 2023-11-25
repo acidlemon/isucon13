@@ -2000,5 +2000,5 @@ INSERT INTO themes (user_id, dark_mode) VALUES (999, false);
 INSERT INTO users (id, name, display_name, description, password) VALUES (1000, 'tomoya450', 'おまんまる', '普段脚本家をしています。\nよろしくおねがいします！\n\n連絡は以下からお願いします。\n\nウェブサイト: http://tomoya45.example.com/\nメールアドレス: tomoya45@example.com\n', '$2a$04$/v16fIbxYBiHvtEmtjgydeJ/fUI2H0OhCgNdTReh5WZUtHYvubDDi');
 INSERT INTO themes (user_id, dark_mode) VALUES (1000, false);
 
- update users JOIN themes t on t.user_id = users.id SET users.dark_mode = t.dark_mode;
+update users JOIN themes t on t.user_id = users.id SET users.dark_mode = t.dark_mode;
 

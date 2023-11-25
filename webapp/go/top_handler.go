@@ -72,7 +72,7 @@ func getStreamerThemeHandler(c echo.Context) error {
 	defer tx.Rollback()
 
 	userModel := UserModel{}
-	err = tx.GetContext(ctx, &userModel, "SELECT id FROM users WHERE name = ?", username)
+	err = tx.GetContext(ctx, &userModel, "SELECT id, dark_mode FROM users WHERE name = ?", username)
 	if errors.Is(err, sql.ErrNoRows) {
 		return echo.NewHTTPError(http.StatusNotFound, "not found user that has the given username")
 	}
