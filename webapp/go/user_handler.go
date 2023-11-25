@@ -296,6 +296,7 @@ func registerHandler(c echo.Context) error {
 		Description:    req.Description,
 		HashedPassword: string(hashedPassword),
 		DarkMode:       req.Theme.DarkMode,
+		IconHash:       "d9f8294e9d895f81ce62e73dc7d5dff862a4fa40bd4e0fecf53f7526a8edcac0",
 	}
 
 	result, err := tx.NamedExecContext(ctx, "INSERT INTO users (name, display_name, description, password, dark_mode) VALUES(:name, :display_name, :description, :password, :dark_mode)", userModel)
