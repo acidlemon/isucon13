@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -456,7 +457,9 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 	}
 	for _, f := range files {
 		ss := strings.Split(f, "-")
+		log.Println("ss = ", ss[2])
 		iconHashStr = ss[2]
+
 		break
 	}
 
