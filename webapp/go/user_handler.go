@@ -312,7 +312,8 @@ func registerHandler(c echo.Context) error {
 		Method: "PATCH",
 		URL:    url,
 		Header: http.Header{
-			"X-API-Key": []string{"isudns"},
+			"X-API-Key":    []string{"isudns"},
+			"Content-Type": []string{"application/json"},
 		},
 		Body: io.NopCloser(strings.NewReader(payload)),
 	})
