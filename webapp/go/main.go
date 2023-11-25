@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -114,6 +115,8 @@ func initializeHandler(c echo.Context) error {
 		c.Logger().Warnf("init.sh failed with err=%s", string(out))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
+
+	time.Sleep(10 * time.Second)
 
 	ctx := c.Request().Context()
 	if err := dbConn.SelectContext(ctx, &globalTagModels, "SELECT * FROM tags ORDER BY id"); err != nil {
