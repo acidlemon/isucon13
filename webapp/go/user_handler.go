@@ -143,14 +143,6 @@ func getIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
 	}
 
-	// if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", user.ID); err != nil {
-	// 	if errors.Is(err, sql.ErrNoRows) {
-	// 		return c.File(fallbackImage)
-	// 	} else {
-	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
-	// 	}
-	// }
-
 	return c.Blob(http.StatusOK, "image/jpeg", image)
 
 	// c.Response().Header().Set("x-accel-redirect", fmt.Sprintf("/img/%s", filepath.Base(files[0])))
@@ -177,16 +169,6 @@ func postIconHandler(c echo.Context) error {
 
 	iconHash := sha256.Sum256(req.Image)
 
-	// files, err := filepath.Glob(fmt.Sprintf("../img/user-%d-*.jpg", userID))
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to glob: "+err.Error())
-	// }
-	// for _, f := range files {
-	// 	if err := os.Remove(f); err != nil {
-	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove file: "+err.Error())
-	// 	}
-	// }
-
 	os.WriteFile(fmt.Sprintf("../img/user-%d.jpg", userID), req.Image, 0644)
 
 	tx, err := dbConn.BeginTxx(ctx, nil)
@@ -195,24 +177,10 @@ func postIconHandler(c echo.Context) error {
 	}
 	defer tx.Rollback()
 
-	// if _, err := tx.ExecContext(ctx, "DELETE FROM icons WHERE user_id = ?", userID); err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old user icon: "+err.Error())
-	// }
-
-	// _, err = tx.ExecContext(ctx, "INSERT INTO icons (user_id, image) VALUES (?, ?)", userID, req.Image)
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
-	// }
-
 	_, err = tx.ExecContext(ctx, "UPDATE users SET icon_hash = ? WHERE id = ?", fmt.Sprintf("%x", iconHash), userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
 	}
-
-	// // iconID, err := rs.LastInsertId()
-	// // if err != nil {
-	// // 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to get last inserted icon id: "+err.Error())
-	// // }
 
 	if err := tx.Commit(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
