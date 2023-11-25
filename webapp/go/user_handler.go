@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -166,7 +165,7 @@ func postIconHandler(c echo.Context) error {
 		}
 	}
 
-	os.WriteFile(fmt.Sprintf("../img/user-%d-%x-.jpg", userID, iconHash), req.Image, 0644)
+	os.WriteFile(fmt.Sprintf("../img/user-%d-%x-p.jpg", userID, iconHash), req.Image, 0644)
 
 	// tx, err := dbConn.BeginTxx(ctx, nil)
 	// if err != nil {
@@ -457,7 +456,6 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 	}
 	for _, f := range files {
 		ss := strings.Split(f, "-")
-		log.Println("ss = ", ss[2])
 		iconHashStr = ss[2]
 
 		break
